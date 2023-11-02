@@ -1,0 +1,7 @@
+pip install virtualenv
+
+virtualenv <NOMBRE_AMBIENTE_VIRTUAL>
+
+./<NOMBRE_AMBIENTE_VIRTUAL>/Scripts/activate
+
+pip install -r requirements.txt
