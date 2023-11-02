@@ -1,16 +1,16 @@
 import pandas as pd
 from mysql import connector
 from dotenv import load_dotenv
-import os
 from datetime import datetime
 import random
+import os
 from random_location import generate_random_coordinates
 
 load_dotenv()
 
-username = "root"
-password = "root"
-host = "127.0.0.1"
+username = os.getenv('DB_USER')
+password = os.getenv('DB_PASSWORD')
+host = os.getenv('DB_HOST')
 
 PAGES_FORMATS = {
     'CineColombia': {'date_format': '%Y-%d-%M', 'geo_format': 'GEO2', 'usr_doc': True},
