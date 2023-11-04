@@ -26,3 +26,4 @@ with beam.Pipeline(options=options) as p:
 
     # Write transformed data to GCS
     transformed_data | "WriteOutput" >> beam.io.WriteToText("gs://your-bucket/output-data/transformed_output.txt")
+    #Mery pipeline
