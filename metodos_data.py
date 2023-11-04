@@ -18,6 +18,7 @@ PAGES_FORMATS = {
     'Procinal': {'date_format': '%M-%d-%Y', 'geo_format': 'GEO3', 'usr_doc': False},
     'UniCine': {'date_format': '%d-%M-%Y', 'geo_format': 'GEO3', 'usr_doc': False, 'JSON': True}
 }
+print(username)
 
 
 def generar_visualizaciones_dia(uni, qty=10, low_price=10, high_price=100):
