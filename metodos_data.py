@@ -18,7 +18,6 @@ PAGES_FORMATS = {
     'Procinal': {'date_format': '%M-%d-%Y', 'geo_format': 'GEO3', 'usr_doc': False},
     'UniCine': {'date_format': '%d-%M-%Y', 'geo_format': 'GEO3', 'usr_doc': False, 'JSON': True}
 }
-print(username)
 
 
 def generar_visualizaciones_dia(uni, qty=10, low_price=10, high_price=100):
@@ -175,11 +174,11 @@ def generate_random_user_name():
 
 
 if __name__ == "__main__":
-    bd = ['CineColombia', 'CineMark', 'Procinal']
+    bd = ['CineColombia', 'CineMark', 'Procinal', 'UniCine']
     for p in bd:
-        # generar_usuarios(bd, qty=20)
-        # print(
-        #     f'Se han generado los datos en la BD {bd} en la tabla usuarios')
+        generar_usuarios(p, qty=20)
+        print(
+            f'Se han generado los datos en la BD {p} en la tabla usuarios')
         generar_visualizaciones_dia(p)
         print(
             f'Se han generado los datos en la BD {p} en la tabla visualizaciones')
