@@ -52,10 +52,52 @@
 # if __name__ == "__main__":
 #     main()
 
+
+########## Funciona de Forma Local con archivos ##########
+
+# import apache_beam as beam
+# from apache_beam.options.pipeline_options import PipelineOptions
+# import json
+# import os
+
+# # Function to convert JSON lines to CSV string
+# def json_to_csv(line):
+#     data = json.loads(line)
+#     # Convert JSON data to CSV string (example, modify as per your JSON structure)
+#     csv_data = ','.join([str(value) for value in data.values()])
+#     return csv_data
+
+# def main(input_folder, output_folder):
+#     options = PipelineOptions()
+
+#     with beam.Pipeline(options=options) as p:
+#         for filename in os.listdir(input_folder):
+#             if filename.endswith('.json'):
+#                 json_file = os.path.join(input_folder, filename)
+#                 json_data = p | f"Read {json_file}" >> beam.io.ReadFromText(json_file)
+#                 transformed_json = json_data | f"JSONToCSV-{os.path.basename(json_file)}" >> beam.Map(json_to_csv)
+
+#                 # Define the output CSV file path
+#                 output_file = os.path.join(output_folder, f"{os.path.basename(json_file).split('.')[0]}.csv")
+
+#                 # Write the CSV data to the output file
+#                 transformed_json | f"WriteToCSV-{os.path.basename(json_file)}" >> beam.io.WriteToText(output_file)
+#             else:
+#                 # If it's not a JSON file, copy it to the output folder as is
+#                 output_file = os.path.join(output_folder, os.path.basename(input_file))
+#                 p | f"CopyToOutput-{os.path.basename(input_file)}" >> beam.io.WriteToText(output_file)
+
+# if __name__ == "__main__":
+#     input_folder = "data-prueba"  # Replace with the path to your local folder
+#     output_folder = "resultados_prueba"  # Replace with the path to your desired output folder
+#     main(input_folder, output_folder)
+
+
+
 import apache_beam as beam
 from apache_beam.options.pipeline_options import PipelineOptions
+from google.cloud import storage
 import json
-import os
 
 # Function to convert JSON lines to CSV string
 def json_to_csv(line):
@@ -64,23 +106,33 @@ def json_to_csv(line):
     csv_data = ','.join([str(value) for value in data.values()])
     return csv_data
 
-def main(input_folder, output_folder):
+def main(input_bucket, output_bucket):
     options = PipelineOptions()
 
+    client = storage.Client()
+    input_gcs_bucket = client.get_bucket(input_bucket)
+    output_gcs_bucket = client.get_bucket(output_bucket)
+
+    blobs = input_gcs_bucket.list_blobs()
+
     with beam.Pipeline(options=options) as p:
-        for filename in os.listdir(input_folder):
-            if filename.endswith('.json'):
-                json_file = os.path.join(input_folder, filename)
-                json_data = p | f"Read {json_file}" >> beam.io.ReadFromText(json_file)
-                transformed_json = json_data | f"JSONToCSV-{os.path.basename(json_file)}" >> beam.Map(json_to_csv)
+        for blob in blobs:
+            if blob.name.endswith('.json'):
+                json_data = p | f"Read {blob.name}" >> beam.io.ReadFromText(f"gs://{input_bucket}/{blob.name}")
+                transformed_json = json_data | f"JSONToCSV-{blob.name}" >> beam.Map(json_to_csv)
 
-                # Define the output CSV file path
-                output_file = os.path.join(output_folder, f"{os.path.basename(json_file).split('.')[0]}.csv")
+                # Define the output CSV file path in the output bucket
+                output_file = f"{blob.name.split('/')[-1].split('.')[0]}.csv"
+                output_blob = output_gcs_bucket.blob(output_file)
 
-                # Write the CSV data to the output file
-                transformed_json | f"WriteToCSV-{os.path.basename(json_file)}" >> beam.io.WriteToText(output_file)
+                # Write the CSV data to the output file in the output bucket
+                transformed_json | f"WriteToCSV-{blob.name}" >> beam.io.WriteToText(output_blob.uri)
+            else:
+                # If it's not a JSON file, copy it to the output bucket as is
+                output_blob = output_gcs_bucket.blob(blob.name)
+                p | f"CopyToOutput-{blob.name}" >> beam.io.WriteToText(output_blob.uri)
 
 if __name__ == "__main__":
-    input_folder = "data-prueba"  # Replace with the path to your local folder
-    output_folder = "resultados_prueba"  # Replace with the path to your desired output folder
-    main(input_folder, output_folder)
+    input_bucket = "gs://transporte_grupo_4/"  
+    output_bucket = "gs://cruda_grupo_4/"  
+    main(input_bucket, output_bucket)
