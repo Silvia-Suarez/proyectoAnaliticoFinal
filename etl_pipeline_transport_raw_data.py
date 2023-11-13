@@ -54,7 +54,7 @@ with beam.Pipeline(options=options) as p:
         if file.endswith('.json'):
             # Read the JSON file and transform it to CSV
             json_data = p | f"Read {file}" >> beam.io.ReadFromText(file)
-            transformed_json = json_data | f"JSONToCSV" >> beam.Map(
+            transformed_json = json_data | f"JSONToCSV {file}" >> beam.Map(
                 json_to_csv)
             dataframes[file] = transformed_json | f"Create DataFrame {file}" >> beam.Map(
                 create_dataframe)
@@ -63,15 +63,15 @@ with beam.Pipeline(options=options) as p:
             data = p | f"Read {file}" >> beam.io.ReadFromText(file)
             transformed_data = (
                 data
-                | f"SplitLines" >> beam.Map(lambda line: line.split(','))
-                | f"CombineFields" >> beam.Map(lambda fields: ','.join(fields))
+                | f"SplitLines {file}" >> beam.Map(lambda line: line.split(','))
+                | f"CombineFields {file}" >> beam.Map(lambda fields: ','.join(fields))
             )
             dataframes[file] = transformed_data | f"Create DataFrame {file}" >> beam.Map(
                 create_dataframe)
 
     # You can access each DataFrame like this:
-    cine_colombia_peliculas_df = dataframes["gs://transporte_grupo_4/CineColombia_peliculas.csv"]
-    cine_colombia_usuarios_df = dataframes["gs://transporte_grupo_4/CineColombia_usuarios.csv"]
+    # cine_colombia_peliculas_df = dataframes["gs://transporte_grupo_4/CineColombia_peliculas.csv"]
+    # cine_colombia_usuarios_df = dataframes["gs://transporte_grupo_4/CineColombia_usuarios.csv"]
     # ... and so on for each CSV file
 
     # Write transformed data to GCS
@@ -80,11 +80,11 @@ with beam.Pipeline(options=options) as p:
     for file, dataframe in dataframes.items():
         if file.endswith('.json'):
             # For JSON file, write the DataFrame to CSV in GCS
-            dataframe.to_csv(
-                f"gs://your-bucket/output-data/{file.split('/')[-1].split('.')[0]}_output.csv", index=False)
+            output_file = f"gs://cruda_grupo_4/first-trasform-data/{file.split('/')[-1].split('.')[0]}_output.csv"
         else:
-            dataframe.to_csv(
-                f"gs://cruda_grupo_4/first-trasform-data/{file.split('/')[-1]}_output.csv", index=False)
+            output_file = f"gs://cruda_grupo_4/first-trasform-data/{file.split('/')[-1]}_output.csv"
+        dataframe.to_csv(output_file, index=False)
+
     # Mery pipeline
 
 # python etl_pipeline_transport_raw_data.py ^
@@ -92,5 +92,5 @@ with beam.Pipeline(options=options) as p:
 #   --job_name etl-pipeline-transporte-1 ^
 #   --temp_location gs://transporte_grupo_4/temp ^
 #   --staging_location gs://transporte_grupo_4/staging ^
-#   --runner DataflowRunner ^
+#   --runner DirectRunner ^
 #   --region us-east1
