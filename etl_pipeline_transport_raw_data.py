@@ -43,9 +43,9 @@ with beam.Pipeline(options=options) as p:
         "gs://transporte_grupo_4/Procinal_peliculas.csv",
         "gs://transporte_grupo_4/Procinal_usuarios.csv",
         "gs://transporte_grupo_4/Procinal_visualizaciones.csv",
-        "gs://transporte_grupo_4/UniCine_peliculas.csv",
-        "gs://transporte_grupo_4/UniCine_usuarios.csv",
-        "gs://transporte_grupo_4/UniCine_visualizaciones.csv"
+        "gs://transporte_grupo_4/UniCine_peliculas.json",
+        "gs://transporte_grupo_4/UniCine_usuarios.json",
+        "gs://transporte_grupo_4/UniCine_visualizaciones.json"
     ]
 
     # Read each CSV file and create a Pandas DataFrame
