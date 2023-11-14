@@ -69,28 +69,17 @@ with beam.Pipeline(options=options) as p:
             dataframes[file] = transformed_data | f"Create DataFrame {file}" >> beam.Map(
                 create_dataframe)
 
-    # You can access each DataFrame like this:
-    # cine_colombia_peliculas_df = dataframes["gs://transporte_grupo_4/CineColombia_peliculas.csv"]
-    # cine_colombia_usuarios_df = dataframes["gs://transporte_grupo_4/CineColombia_usuarios.csv"]
-    # ... and so on for each CSV file
-
-    # Write transformed data to GCS
-    # This part can be modified to write the dataframes to GCS or perform other operations
-    # For example:
     for file, dataframe in dataframes.items():
         if file.endswith('.json'):
             # For JSON file, write the DataFrame to CSV in GCS
-            output_file = f"gs://cruda_grupo_4/first-trasform-data/{file.split('/')[-1].split('.')[0]}_output.csv"
+            output_file = f"gs://cruda_grupo_4/{file.split('/')[-1].split('.')[0]}_output.csv"
         else:
-            output_file = f"gs://cruda_grupo_4/first-trasform-data/{file.split('/')[-1]}_output.csv"
-        dataframe.to_csv(output_file, index=False)
-
-    # Mery pipeline
+            output_file = f"gs://cruda_grupo_4/{file.split('/')[-1]}_output.csv"
 
 # python etl_pipeline_transport_raw_data.py ^
 #   --project datalake-dev-399421 ^
 #   --job_name etl-pipeline-transporte-1 ^
 #   --temp_location gs://transporte_grupo_4/temp ^
 #   --staging_location gs://transporte_grupo_4/staging ^
-#   --runner DirectRunner ^
+#   --runner DataflowRunner ^
 #   --region us-east1
