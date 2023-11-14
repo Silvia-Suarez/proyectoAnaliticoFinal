@@ -15,7 +15,7 @@
 #     parser.add_argument("--output")
 
 #     our_args, beam_args = parser.parse_known_args()
-    
+
 #     run_pipeline(our_args, beam_args)
 
 # def preprocess_json(json_string):
@@ -93,18 +93,20 @@
 #     main(input_folder, output_folder)
 
 
-
 import apache_beam as beam
 from apache_beam.options.pipeline_options import PipelineOptions
 from google.cloud import storage
 import json
 
 # Function to convert JSON lines to CSV string
+
+
 def json_to_csv(line):
     data = json.loads(line)
     # Convert JSON data to CSV string (example, modify as per your JSON structure)
     csv_data = ','.join([str(value) for value in data.values()])
     return csv_data
+
 
 def main(input_bucket, output_bucket):
     options = PipelineOptions()
@@ -118,21 +120,27 @@ def main(input_bucket, output_bucket):
     with beam.Pipeline(options=options) as p:
         for blob in blobs:
             if blob.name.endswith('.json'):
-                json_data = p | f"Read {blob.name}" >> beam.io.ReadFromText(f"gs://{input_bucket}/{blob.name}")
-                transformed_json = json_data | f"JSONToCSV-{blob.name}" >> beam.Map(json_to_csv)
+                json_data = p | f"Read {blob.name}" >> beam.io.ReadFromText(
+                    f"gs://{input_bucket}/{blob.name}")
+                transformed_json = json_data | f"JSONToCSV-{blob.name}" >> beam.Map(
+                    json_to_csv)
 
                 # Define the output CSV file path in the output bucket
                 output_file = f"{blob.name.split('/')[-1].split('.')[0]}.csv"
                 output_blob = output_gcs_bucket.blob(output_file)
 
                 # Write the CSV data to the output file in the output bucket
-                transformed_json | f"WriteToCSV-{blob.name}" >> beam.io.WriteToText(output_blob.uri)
+                transformed_json | f"WriteToCSV-{blob.name}" >> beam.io.WriteToText(
+                    output_blob.path)
             else:
                 # If it's not a JSON file, copy it to the output bucket as is
-                output_blob = output_gcs_bucket.blob(blob.name)
-                p | f"CopyToOutput-{blob.name}" >> beam.io.WriteToText(output_blob.uri)
+                # output_blob = output_gcs_bucket.blob(blob.name)
+                p | f"CopyToOutput-{blob.name}" >> beam.io.WriteToText(
+                    # output_blob.path)
+                    f"gs://{output_bucket}/{blob.name}")
+
 
 if __name__ == "__main__":
-    input_bucket = "gs://transporte_grupo_4/"  
-    output_bucket = "gs://cruda_grupo_4/"  
+    input_bucket = "transporte_grupo_4"
+    output_bucket = "cruda_grupo_4"
     main(input_bucket, output_bucket)
